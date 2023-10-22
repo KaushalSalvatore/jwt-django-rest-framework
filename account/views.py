@@ -5,7 +5,9 @@ from rest_framework.views import APIView
 from account.serializers import (UserRegistrationSerializer,
                                  UserLoginSerializer,
                                  UserProfileSerializer, 
-                                 UserChangePasswordSerializer)
+                                 UserChangePasswordSerializer,
+                                 SendPasswordResetEmailSerializer,
+                                 UserPasswordResetSerializer)
 
 from django.contrib.auth import authenticate
 from account.renderers import UserRenderer
@@ -65,6 +67,23 @@ class UserChangePasswordView(APIView):
                                                   context={'user':request.user})
         if serializer.is_valid(raise_exception=True):
             return Response({'message':'Password Change Success'},status=status.HTTP_200_OK)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+class SendPasswordResetEmailView(APIView):
+    renderer_classes = [UserRenderer]
+    def post(self,request,format=None):
+        serializer = SendPasswordResetEmailSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            return Response({'message':'Password Reset link send. Please check on Email'}, status=status.HTTP_200_OK)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+    
+
+class UserPasswordResetView(APIView):
+    renderer_classes = [UserRenderer]
+    def post(self,request,uid,token,format=None):
+        serializer = UserPasswordResetSerializer(data=request.data,context={'uid': uid,'token':token})
+        if serializer.is_valid(raise_exception=True):
+            return Response({'message':'Password Reset Successfully'},status=status.HTTP_200_OK)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
 
